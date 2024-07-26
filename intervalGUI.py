@@ -4,10 +4,10 @@ import subprocess
 import time
 import threading
 import os
-import argparse
-from datetime import datetime, timedelta
+from datetime import datetime
 import serial
-import config
+import configparser
+import argparse
 
 class IntervalCaptureApp:
     def __init__(self, root, cam_id):
@@ -26,6 +26,10 @@ class IntervalCaptureApp:
         self.laser_shutter_var = tk.DoubleVar(value=1.0)
         self.output_dir = tk.StringVar(value='./output')
         self.base_name = tk.StringVar(value='image_')
+
+        # Load config
+        self.config = configparser.ConfigParser()
+        self.config.read('config.ini')
 
         # Initialize Arduino
         self.serial_conn = self.initialize_arduino()
@@ -88,10 +92,11 @@ class IntervalCaptureApp:
 
     def initialize_arduino(self):
         try:
-            port = config.PORT_ARDUINO_ONE if self.cam_id == 0 else config.PORT_ARDUINO_TWO
-            baudrate = config.BAUDRATE
+            port = self.config.get('Arduino', 'PORT_ARDUINO_ONE') if self.cam_id == 0 else self.config.get('arduino', 'PORT_ARDUINO_TWO')
+            baudrate = self.config.getint('Arduino', 'BAUDRATE')
             ser = serial.Serial(port, baudrate, timeout=1)
             time.sleep(2)  # Wait for the serial connection to initialize
+            print('Arduino intialized')
             return ser
         except Exception as e:
             print(f"Arduino initialization failed: {e}")

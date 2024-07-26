@@ -53,7 +53,7 @@ def run_camera_control(cam_id, text_widget, event):
 
         proc = subprocess.Popen(['python3.10', 'liveView.py', str(cam_id)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         camera_processes[cam_id] = (proc, arduino_conn, False)  # Store the process, Arduino connection and stopped flag
-        text_widget.insert(tk.END, f"Camera {cam_id}: Started successfully, going to open live feed.\n")
+        text_widget.insert(tk.END, f"Camera {cam_id}: Started successfully, going to open live view.\n")
 
         # Read the output in real-time
         for line in proc.stdout:
@@ -124,6 +124,11 @@ def launch_interval_capture(cam_id, text_widget):
     text_widget.insert(tk.END, f"Launching interval capture for camera {cam_id}...\n")
     threading.Thread(target=lambda: subprocess.Popen(['python3.10', 'intervalGUI.py', str(cam_id)])).start()
 
+def on_closing():
+    for cam_id in list(camera_processes.keys()):  # Use list to avoid RuntimeError: dictionary changed size during iteration
+        stop_camera_control(cam_id, text_widget)
+    root.destroy()
+
 if __name__ == '__main__':
     root = tk.Tk()
     root.title("Camera Control")
@@ -153,5 +158,8 @@ if __name__ == '__main__':
 
     button1_interval = ttk.Button(frame, text="Launch Interval Capture for Camera 1", command=lambda: threading.Thread(target=launch_interval_capture, args=(1, text_widget)).start())
     button1_interval.grid(row=1, column=2, padx=5, pady=5)
+
+    # Bind the close event to the on_closing function
+    root.protocol("WM_DELETE_WINDOW", on_closing)
 
     root.mainloop()
