@@ -19,6 +19,7 @@ class IntervalCaptureApp:
         self.image_count = 0
         self.total_images = 0
         self.captured_images = 0
+        self.manual_shutter_control = False
 
         self.interval_var = tk.DoubleVar(value=1.0)
         self.duration_var = tk.DoubleVar(value=1.0)
@@ -69,6 +70,13 @@ class IntervalCaptureApp:
         self.stop_button = ttk.Button(root, text="Stop", command=self.stop_capture)
         self.stop_button.grid(row=6, column=1, pady=5, padx=5)
         self.stop_button.state(["disabled"])
+
+        # Manual control buttons
+        self.open_shutter_button = ttk.Button(root, text="Open Shutter", command=self.manual_open_shutter)
+        self.open_shutter_button.grid(row=6, column=2, pady=5, padx=5)
+
+        self.close_shutter_button = ttk.Button(root, text="Close Shutter", command=self.manual_close_shutter)
+        self.close_shutter_button.grid(row=6, column=3, pady=5, padx=5)
 
         # Handle close button
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -176,6 +184,16 @@ class IntervalCaptureApp:
     def update_laser_shutter_time(self, *args):
         # Update the laser shutter time
         self.laser_shutter_time = self.laser_shutter_var.get()
+
+    def manual_open_shutter(self):
+        if self.serial_conn and not self.is_running:
+            self.send_command("OPEN")
+            self.manual_shutter_control = True
+
+    def manual_close_shutter(self):
+        if self.serial_conn and not self.is_running:
+            self.send_command("CLOSE")
+            self.manual_shutter_control = False
 
     def on_closing(self):
         if self.is_running:

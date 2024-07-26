@@ -5,16 +5,24 @@ import threading
 import multiprocessing as mp
 import time
 import serial
+import configparser
+
+# Read configuration from config.ini
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+PORT_ARDUINO_ONE = config['Arduino']['PORT_ARDUINO_ONE']
+PORT_ARDUINO_TWO = config['Arduino']['PORT_ARDUINO_TWO']
+BAUDRATE = int(config['Arduino']['BAUDRATE'])
 
 # Dictionary to keep track of subprocesses by camera ID
 camera_processes = {}
 
-# Arduino ports and baud rate (ensure these match your actual setup)
+# Arduino ports dictionary
 PORTS_ARDUINO = {
-    0: '/dev/cu.usbmodem1301',  # Port for Arduino controlling shutter for Camera 0
-    1: '/dev/ttyACM1'   # Port for Arduino controlling shutter for Camera 1
+    0: PORT_ARDUINO_ONE,  # Port for Arduino controlling shutter for Camera 0
+    1: PORT_ARDUINO_TWO   # Port for Arduino controlling shutter for Camera 1
 }
-BAUDRATE = 9600
 
 def initialize_arduino(port):
     try:
@@ -89,20 +97,24 @@ def delayed_stop_camera(cam_id, text_widget):
     threading.Thread(target=stop_camera_control, args=(cam_id, text_widget)).start()
 
 def on_camera_button_click(cam_id, text_widget):
-    text_widget.insert(tk.END, f"Starting camera {cam_id}...\n")
+    text_widget.insert(tk.END, f"Trying to start camera {cam_id}...\n")
     # Run the subprocess in a separate thread to avoid blocking the GUI
     p, event = delayed_start_camera(cam_id, text_widget)
-    if event.is_set():
-        text_widget.insert(tk.END, f"Camera {cam_id} failed due to disconnection.\n")
+    # Ensure to handle the disconnection event properly
+    def monitor_event():
+        event.wait()
+        text_widget.insert(tk.END, f"Camera {cam_id} disconnected.\n")
         stop_camera_control(cam_id, text_widget)
+    
+    threading.Thread(target=monitor_event).start()
 
 def on_stop_camera_button_click(cam_id, text_widget):
     text_widget.insert(tk.END, f"Stopping camera {cam_id}...\n")
     # Stop the subprocess in a separate thread to avoid blocking the GUI
-    threading.Thread(target=stop_camera_control, args=(cam_id, text_widget)).start()
+    delayed_stop_camera(cam_id, text_widget)
 
 def launch_interval_capture(cam_id, text_widget):
-    text_widget.insert(tk.END, f"Stopping camera {cam_id} for interval capture...\n")
+    text_widget.insert(tk.END, f"Camera {cam_id}: Stopped live capture in order to start interval capture.\n")
     # Stop the camera first
     stop_camera_control(cam_id, text_widget)
     # Launch interval capture
@@ -121,19 +133,19 @@ if __name__ == '__main__':
     text_widget.grid(row=3, column=0, columnspan=3, pady=10)
 
     # Create buttons for starting and stopping camera IDs 0 and 1 in a 3x2 format
-    button0_start = ttk.Button(frame, text="Start Camera 0", command=lambda: threading.Thread(target=delayed_start_camera, args=(0, text_widget)).start())
+    button0_start = ttk.Button(frame, text="Start Camera 0", command=lambda: on_camera_button_click(0, text_widget))
     button0_start.grid(row=0, column=0, padx=5, pady=5)
 
-    button0_stop = ttk.Button(frame, text="Stop Camera 0", command=lambda: threading.Thread(target=delayed_stop_camera, args=(0, text_widget)).start())
+    button0_stop = ttk.Button(frame, text="Stop Camera 0", command=lambda: on_stop_camera_button_click(0, text_widget))
     button0_stop.grid(row=0, column=1, padx=5, pady=5)
 
     button0_interval = ttk.Button(frame, text="Launch Interval Capture for Camera 0", command=lambda: threading.Thread(target=launch_interval_capture, args=(0, text_widget)).start())
     button0_interval.grid(row=0, column=2, padx=5, pady=5)
 
-    button1_start = ttk.Button(frame, text="Start Camera 1", command=lambda: threading.Thread(target=delayed_start_camera, args=(1, text_widget)).start())
+    button1_start = ttk.Button(frame, text="Start Camera 1", command=lambda: on_camera_button_click(1, text_widget))
     button1_start.grid(row=1, column=0, padx=5, pady=5)
 
-    button1_stop = ttk.Button(frame, text="Stop Camera 1", command=lambda: threading.Thread(target=delayed_stop_camera, args=(1, text_widget)).start())
+    button1_stop = ttk.Button(frame, text="Stop Camera 1", command=lambda: on_stop_camera_button_click(1, text_widget))
     button1_stop.grid(row=1, column=1, padx=5, pady=5)
 
     button1_interval = ttk.Button(frame, text="Launch Interval Capture for Camera 1", command=lambda: threading.Thread(target=launch_interval_capture, args=(1, text_widget)).start())

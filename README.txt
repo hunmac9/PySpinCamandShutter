@@ -1,0 +1,35 @@
+1. Install Visual Studio Code (VSCode) from Microsoft (latest version)
+-----------------------------------------------------------------------------
+2. Next, install Python 3.10 from the internet. 64 bit version is preferred.
+-----------------------------------------------------------------------------
+(Optional, if python is being funky) Set the PATH environment variable for the Python installation.
+
+   My Computer > Properties > Advanced System Settings > Environment Variables
+
+   Add the Python installation location to the PATH variable. For example,
+   if you installed Python at C:\Python310\, you would add the following entry
+   to the PATH variable:
+
+   C:\Python310\<rest_of_path>
+-----------------------------------------------------------------------------
+
+3. Configure your Python installation. In VSCode, press control+j. In the command line, run the following
+   commands (copy and paste one line at a time) to update and install dependencies for your associated Python version:
+
+   python3.10 -m ensurepip
+   python3.10 -m pip install --upgrade pip matplotlib pillow==9.2.0
+   python3.10 -m pip install numpy==1.26.4
+-----------------------------------------------------------------------------
+4. To ensure prerequisites such as drivers and Visual Studio redistributables
+   are installed on the system, run the Spinnaker SDK installer that corresponds
+   with the PySpin version number. For example, if installing PySpin 3.0.0.0,
+   install Spinnaker 3.0.0.0 beforehand, selecting only the Visual Studio
+   runtimes and drivers. Please install at least version 4.6
+-----------------------------------------------------------------------------
+5. Run the following command to install PySpin to your associated Python version. 
+
+   python3.10 -m pip install [path to .whl file, eg, C:/users/documents/spinnaker_python-4.6.x.x-cp310-cp310-win_amd64.whl]
+
+   Ensure that the wheel downloaded matches the Python version you are installing to! (eg cp310 for python 3.10)
+-----------------------------------------------------------------------------
+6. 
