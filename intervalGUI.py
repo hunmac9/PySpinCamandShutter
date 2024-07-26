@@ -155,25 +155,21 @@ class IntervalCaptureApp:
         print("Capture stopped by user.")
 
     def interval_capture(self, interval):
-        try:
-            while self.is_running and self.captured_images < self.total_images:
-                self.manage_shutter_and_capture()
-                self.captured_images += 1
-                self.progress_label.config(text=f"Captured {self.captured_images} of {self.total_images} images")
-                # Adjust for interval in minutes
-                for _ in range(int(interval * 60)):
-                    if self.is_running:
-                        time.sleep(1)
-                    else:
-                        print("Capture process interrupted by stop request.")
-                        break
-            if self.captured_images >= self.total_images:
-                self.progress_label.config(text=f"Experiment Complete, {self.captured_images} pictures captured")
-        except Exception as e:
-            print(f"An error occurred: {e}")
-        finally:
-            if not self.is_running:
-                self.progress_label.config(text=f"Capture stopped, {self.captured_images} pictures captured")
+        while self.is_running and self.captured_images < self.total_images:
+            self.manage_shutter_and_capture()
+            self.captured_images += 1
+            self.progress_label.config(text=f"Captured {self.captured_images} of {self.total_images} images")
+            # Adjust for interval in minutes
+            for _ in range(int(interval * 60)):
+                if self.is_running:
+                    time.sleep(1)
+                else:
+                    print("Capture process interrupted by stop request.")
+                    break
+        if self.captured_images >= self.total_images:
+            self.progress_label.config(text=f"Experiment Complete, {self.captured_images} pictures captured")
+        if not self.is_running:
+            self.progress_label.config(text=f"Capture stopped, {self.captured_images} pictures captured")
 
     def manage_shutter_and_capture(self):
         delay_before_capture = self.laser_shutter_time - 1
