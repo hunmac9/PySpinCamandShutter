@@ -198,21 +198,24 @@ class IntervalCaptureApp:
     def capture_single_image(self):
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         file_name = f"{self.base_name.get()}_{timestamp}.tiff"
-        file_path = os.path.join(self.output_dir.get(), file_name)
+        filepath = os.path.join(self.output_dir.get(), file_name)
 
         # Call the existing imageCap.py script to capture the image
         try:
             result = subprocess.run(
-                ['python3.10', 'imageCap.py', str(self.cam_id), file_path],
+                ['python3.10', 'imageCap.py', str(self.cam_id), filepath],
                 check=True,  # This ensures that an exception is raised for non-zero exit codes.
                 capture_output=True,  # This captures stdout and stderr if needed.
                 text=True
             )
+            # If we reach this point, it means the subprocess call was successful.
             print("Image captured successfully.")
-        except subprocess.CalledProcessError as e:
-            print(f"Error capturing image: {e.stderr}")
-        except Exception as e:
-            print(f"Unexpected error: {str(e)}")
+        except:
+            if os.path.isfile(filepath):
+                print(f'Image {filepath} captured successfully.')
+            else:
+                print('No image captured')
+                print(f"Error: {e.stderr}")
 
     def update_laser_shutter_time(self, *args):
         # Update the laser shutter time

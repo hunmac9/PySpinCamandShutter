@@ -3,13 +3,13 @@ from camera_interface import CameraInterface, load_config
 
 def capture_image(cam, filepath):
     success = 0
-    try:
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        cam.capture_image(filepath)
-        print(f'success, captured an image and saved to {filepath}')
+    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+    cam.capture_image(filepath)
+    if os.path.isfile(filepath):
+        print('image captured sucessfully')
         success = 1
-    except Exception as e:
-        print(f'imCap error: {e}')
+    else:
+        print('error in image capturing logic')
     return success
 
 if __name__ == '__main__':
