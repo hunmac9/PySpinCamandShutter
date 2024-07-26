@@ -17,8 +17,7 @@
    commands (copy and paste one line at a time) to update and install dependencies for your associated Python version:
 
    python3.10 -m ensurepip
-   python3.10 -m pip install --upgrade pip matplotlib pillow==9.2.0
-   python3.10 -m pip install numpy==1.26.4
+   python3.10 -m pip install pyserial opencv-python numpy==1.26.4
 -----------------------------------------------------------------------------
 4. To ensure prerequisites such as drivers and Visual Studio redistributables
    are installed on the system, run the Spinnaker SDK installer that corresponds

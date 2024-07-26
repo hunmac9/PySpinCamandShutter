@@ -117,7 +117,8 @@ class CameraInterface:
         self.camera.BeginAcquisition()
 
     def stop_acquisition(self):
-        self.camera.EndAcquisition()
+        if self.camera.IsStreaming():
+            self.camera.EndAcquisition()
 
     def restart_acquisition(self):
         self.stop_acquisition()
@@ -164,7 +165,7 @@ class CameraInterface:
             except Exception as e:
                 print(f"Failed to load {prop}: {e}")
 
-    def __del__(self):
+    def cleanup(self):
         try:
             if hasattr(self, 'camera') and self.camera is not None:
                 if self.camera.IsStreaming():
@@ -173,7 +174,19 @@ class CameraInterface:
         except Exception as e:
             print(f"Exception during camera de-initialization: {e}")
         finally:
-            if hasattr(self, 'camera_list') and self.camera_list is not None:
-                self.camera_list.Clear()
-            if hasattr(self, 'system') and self.system is not None:
-                self.system.ReleaseInstance()
+            try:
+                if hasattr(self, 'camera_list') and self.camera_list is not None:
+                    self.camera_list.Clear()
+                if hasattr(self, 'system') and self.system is not None:
+                    self.system.ReleaseInstance()
+            except PySpin.SpinnakerException as e:
+                if '[-1004]' in str(e):
+                    print("Ignoring known issue with Spinnaker interface clearing.")
+                else:
+                    print(f"Exception during system release: {e}")
+
+    def __del__(self):
+        try:
+            self.cleanup()
+        except Exception as e:
+            print(f"Exception during destruction: {e}")

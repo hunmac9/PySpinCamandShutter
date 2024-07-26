@@ -68,19 +68,27 @@ class IntervalCaptureApp:
         self.progress_label = ttk.Label(root, text="Captured 0 of 0 images")
         self.progress_label.grid(row=5, column=0, columnspan=3, pady=5, padx=5)
 
+        # Button frame
+        self.button_frame = ttk.Frame(root)
+        self.button_frame.grid(row=6, column=0, columnspan=3, pady=5, padx=5)
+
         # Start and stop buttons
-        self.start_button = ttk.Button(root, text="Start", command=self.start_capture)
-        self.start_button.grid(row=6, column=0, pady=5, padx=5)
-        self.stop_button = ttk.Button(root, text="Stop", command=self.stop_capture)
-        self.stop_button.grid(row=6, column=1, pady=5, padx=5)
+        self.start_button = ttk.Button(self.button_frame, text="Start", command=self.start_capture)
+        self.start_button.grid(row=0, column=0, pady=5, padx=2)
+        self.stop_button = ttk.Button(self.button_frame, text="Stop", command=self.stop_capture)
+        self.stop_button.grid(row=0, column=1, pady=5, padx=2)
         self.stop_button.state(["disabled"])
 
         # Manual control buttons
-        self.open_shutter_button = ttk.Button(root, text="Open Shutter", command=self.manual_open_shutter)
-        self.open_shutter_button.grid(row=6, column=2, pady=5, padx=5)
+        self.open_shutter_button = ttk.Button(self.button_frame, text="Open Shutter", command=self.manual_open_shutter)
+        self.open_shutter_button.grid(row=0, column=2, pady=5, padx=2)
 
-        self.close_shutter_button = ttk.Button(root, text="Close Shutter", command=self.manual_close_shutter)
-        self.close_shutter_button.grid(row=6, column=3, pady=5, padx=5)
+        self.close_shutter_button = ttk.Button(self.button_frame, text="Close Shutter", command=self.manual_close_shutter)
+        self.close_shutter_button.grid(row=0, column=3, pady=5, padx=2)
+
+        # Indicator light
+        self.indicator = tk.Canvas(self.button_frame, width=20, height=20, bg="grey")
+        self.indicator.grid(row=0, column=4, pady=5, padx=2)
 
         # Handle close button
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -92,11 +100,11 @@ class IntervalCaptureApp:
 
     def initialize_arduino(self):
         try:
-            port = self.config.get('Arduino', 'PORT_ARDUINO_ONE') if self.cam_id == 0 else self.config.get('arduino', 'PORT_ARDUINO_TWO')
+            port = self.config.get('Arduino', 'PORT_ARDUINO_ONE') if self.cam_id == 0 else self.config.get('Arduino', 'PORT_ARDUINO_TWO')
             baudrate = self.config.getint('Arduino', 'BAUDRATE')
             ser = serial.Serial(port, baudrate, timeout=1)
             time.sleep(2)  # Wait for the serial connection to initialize
-            print('Arduino intialized')
+            print('Arduino initialized')
             return ser
         except Exception as e:
             print(f"Arduino initialization failed: {e}")
@@ -129,6 +137,7 @@ class IntervalCaptureApp:
             self.stop_button.state(["!disabled"])
 
             self.progress_label.config(text=f"Captured {self.captured_images} of {self.total_images} images")
+            self.set_indicator("green")
 
             # Start the interval capture
             self.capture_thread = threading.Thread(target=self.interval_capture, args=(interval,))
@@ -141,7 +150,9 @@ class IntervalCaptureApp:
         self.is_running = False
         self.start_button.state(["!disabled"])
         self.stop_button.state(["disabled"])
+        self.set_indicator("red")
         self.progress_label.config(text=f"Capture stopped, {self.captured_images} pictures captured")
+        print("Capture stopped by user.")
 
     def interval_capture(self, interval):
         try:
@@ -150,13 +161,19 @@ class IntervalCaptureApp:
                 self.captured_images += 1
                 self.progress_label.config(text=f"Captured {self.captured_images} of {self.total_images} images")
                 # Adjust for interval in minutes
-                time.sleep(interval * 60)
+                for _ in range(int(interval * 60)):
+                    if self.is_running:
+                        time.sleep(1)
+                    else:
+                        print("Capture process interrupted by stop request.")
+                        break
             if self.captured_images >= self.total_images:
                 self.progress_label.config(text=f"Experiment Complete, {self.captured_images} pictures captured")
+        except Exception as e:
+            print(f"An error occurred: {e}")
         finally:
             if not self.is_running:
                 self.progress_label.config(text=f"Capture stopped, {self.captured_images} pictures captured")
-            self.stop_capture()
 
     def manage_shutter_and_capture(self):
         delay_before_capture = self.laser_shutter_time - 1
@@ -184,7 +201,18 @@ class IntervalCaptureApp:
         file_path = os.path.join(self.output_dir.get(), file_name)
 
         # Call the existing imageCap.py script to capture the image
-        subprocess.run(['python3.10', 'imageCap.py', str(self.cam_id), file_path])
+        try:
+            result = subprocess.run(
+                ['python3.10', 'imageCap.py', str(self.cam_id), file_path],
+                check=True,  # This ensures that an exception is raised for non-zero exit codes.
+                capture_output=True,  # This captures stdout and stderr if needed.
+                text=True
+            )
+            print("Image captured successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"Error capturing image: {e.stderr}")
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
 
     def update_laser_shutter_time(self, *args):
         # Update the laser shutter time
@@ -199,6 +227,9 @@ class IntervalCaptureApp:
         if self.serial_conn and not self.is_running:
             self.send_command("CLOSE")
             self.manual_shutter_control = False
+
+    def set_indicator(self, color):
+        self.indicator.config(bg=color)
 
     def on_closing(self):
         if self.is_running:
