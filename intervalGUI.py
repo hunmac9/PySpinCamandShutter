@@ -184,34 +184,40 @@ class IntervalCaptureApp:
             time.sleep(delay_before_capture)
         else:
             print("Arduino connection not available, skipping the shutter control.")
-
+        
+        # Capture image with retry logic
         self.capture_single_image()
 
         if self.serial_conn:
             # Close the laser shutter
             self.send_command("CLOSE")
 
-    def capture_single_image(self):
+    def capture_single_image(self, max_retries=5):
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         file_name = f"{self.base_name.get()}_{timestamp}.tiff"
         filepath = os.path.join(self.output_dir.get(), file_name)
 
-        # Call the existing imageCap.py script to capture the image
-        try:
-            result = subprocess.run(
-                ['python3.10', 'imageCap.py', str(self.cam_id), filepath],
-                check=True,  # This ensures that an exception is raised for non-zero exit codes.
-                capture_output=True,  # This captures stdout and stderr if needed.
-                text=True
-            )
-            # If we reach this point, it means the subprocess call was successful.
-            print("Image captured successfully.")
-        except:
-            if os.path.isfile(filepath):
-                print(f'Image {filepath} captured successfully.')
-            else:
-                print('No image captured')
-                print(f"Error: {e.stderr}")
+        attempt = 0
+        while attempt < max_retries:
+            try:
+                result = subprocess.run(
+                    ['python3.10', 'imageCap.py', str(self.cam_id), filepath],
+                    check=True,  # This ensures that an exception is raised for non-zero exit codes.
+                    capture_output=True,  # This captures stdout and stderr if needed.
+                    text=True
+                )
+                print("Image captured successfully.")
+                break  # Break the loop if capture is successful
+            except subprocess.CalledProcessError as e:  # Capture the specific error
+                attempt += 1
+                print(f"Attempt {attempt} failed: {e.stderr}")
+                if attempt < max_retries:
+                    print(f"Retrying capture ({attempt}/{max_retries})...")
+                else:
+                    print(f"Capture failed after {attempt} attempts. Moving to next capture or stopping if this is the last one.")
+                    if not os.path.isfile(filepath):
+                        print('No image captured')
+                        print(f"Error: {e.stderr}")
 
     def update_laser_shutter_time(self, *args):
         # Update the laser shutter time
