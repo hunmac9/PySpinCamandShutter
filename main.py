@@ -15,7 +15,7 @@ PORT_ARDUINO_ONE = config['Arduino']['PORT_ARDUINO_ONE']
 PORT_ARDUINO_TWO = config['Arduino']['PORT_ARDUINO_TWO']
 BAUDRATE = int(config['Arduino']['BAUDRATE'])
 
-# Dictionary to keep track of subprocesses by camera ID
+# Dictionary to keep track of subprocesses and their status by camera ID
 camera_processes = {}
 
 # Arduino ports dictionary
@@ -52,8 +52,8 @@ def run_camera_control(cam_id, text_widget, event):
             send_command(arduino_conn, 'OPEN')  # Open the laser shutter
 
         proc = subprocess.Popen(['python3.10', 'liveView.py', str(cam_id)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        camera_processes[cam_id] = (proc, arduino_conn)  # Store the process and Arduino connection
-        text_widget.insert(tk.END, f"Camera {cam_id}: Started successfully.\n")
+        camera_processes[cam_id] = (proc, arduino_conn, False)  # Store the process, Arduino connection and stopped flag
+        text_widget.insert(tk.END, f"Camera {cam_id}: Started successfully, going to open live feed.\n")
 
         # Read the output in real-time
         for line in proc.stdout:
@@ -63,18 +63,21 @@ def run_camera_control(cam_id, text_widget, event):
 
         proc.wait()
         if proc.returncode != 0:
-            if cam_id in camera_processes:  # Ensure it's not a stopped process
+            _, _, stopped = camera_processes.get(cam_id, (None, None, False))
+            if not stopped:  # Ensure it's not an expected stopped process
                 text_widget.insert(tk.END, f"Camera {cam_id} failed to start.\n")
                 text_widget.insert(tk.END, proc.stderr.read())
                 text_widget.insert(tk.END, f"Camera {cam_id} will not open, please close any open cameras and try again.\n")
     except Exception as e:
-        if cam_id in camera_processes:  # Ensure it's not a stopped process
+        _, _, stopped = camera_processes.get(cam_id, (None, None, False))
+        if not stopped:  # Ensure it's not an expected stopped process
             text_widget.insert(tk.END, f"Camera {cam_id} failed with error: {str(e)}\n")
 
 def stop_camera_control(cam_id, text_widget):
     if cam_id in camera_processes:
-        proc, arduino_conn = camera_processes[cam_id]
+        proc, arduino_conn, _ = camera_processes[cam_id]
         try:
+            camera_processes[cam_id] = (proc, arduino_conn, True)  # Set stopped flag to True
             proc.terminate()
             proc.wait(timeout=5)  # Wait for the process to terminate
             text_widget.insert(tk.END, f"Camera {cam_id}: Stopped successfully.\n")
