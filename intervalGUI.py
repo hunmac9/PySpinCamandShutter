@@ -1,9 +1,11 @@
+import gc
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import subprocess
 import time
 import threading
 import os
+import psutil
 from datetime import datetime
 import serial
 import configparser
@@ -11,6 +13,12 @@ import argparse
 
 class IntervalCaptureApp:
     def __init__(self, root, cam_id):
+        # Initialization code (unchanged)
+        self.max_retries = 5
+        self.initial_retry_sleep_time = 1  # Initial sleep time before the first retry (in seconds)
+        self.max_retry_sleep_time = 30  # Maximum sleep time between retries (in seconds)
+
+
         self.root = root
         self.root.title(f"Interval Capture - Camera {cam_id}")
 
@@ -156,11 +164,14 @@ class IntervalCaptureApp:
 
     def interval_capture(self, interval):
         while self.is_running and self.captured_images < self.total_images:
+            start_time = time.time()
             self.manage_shutter_and_capture()
             self.captured_images += 1
             self.progress_label.config(text=f"Captured {self.captured_images} of {self.total_images} images")
+            elapsed_time = time.time() - start_time
+            sleep_time = max(0, interval * 60 - elapsed_time)
             # Adjust for interval in minutes
-            for _ in range(int(interval * 60)):
+            for _ in range(int(sleep_time)):
                 if self.is_running:
                     time.sleep(1)
                 else:
@@ -184,7 +195,7 @@ class IntervalCaptureApp:
             time.sleep(delay_before_capture)
         else:
             print("Arduino connection not available, skipping the shutter control.")
-        
+    
         # Capture image with retry logic
         self.capture_single_image()
 
@@ -192,13 +203,21 @@ class IntervalCaptureApp:
             # Close the laser shutter
             self.send_command("CLOSE")
 
-    def capture_single_image(self, max_retries=5):
+    def capture_single_image(self):
         timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
         file_name = f"{self.base_name.get()}_{timestamp}.tiff"
         filepath = os.path.join(self.output_dir.get(), file_name)
 
-        attempt = 0
-        while attempt < max_retries:
+        retry_sleep_time = self.initial_retry_sleep_time
+        for attempt in range(1, self.max_retries + 1):
+            # Check available memory
+            memory_info = psutil.virtual_memory()
+            if memory_info.available < 100 * 1024 * 1024:  # Less than 100MB available
+                print(f"Memory low, waiting {retry_sleep_time} seconds before retrying...")
+                time.sleep(retry_sleep_time)
+                retry_sleep_time = min(retry_sleep_time * 2, self.max_retry_sleep_time)
+                continue
+
             try:
                 result = subprocess.run(
                     ['python3.10', 'imageCap.py', str(self.cam_id), filepath],
@@ -207,17 +226,28 @@ class IntervalCaptureApp:
                     text=True
                 )
                 print("Image captured successfully.")
-                break  # Break the loop if capture is successful
-            except subprocess.CalledProcessError as e:  # Capture the specific error
-                attempt += 1
-                print(f"Attempt {attempt} failed: {e.stderr}")
-                if attempt < max_retries:
-                    print(f"Retrying capture ({attempt}/{max_retries})...")
-                else:
+                if os.path.isfile(filepath):
+                    print(f'Image {filepath} captured successfully.')
+                    break  # Break the loop if the capture was successful
+            except subprocess.CalledProcessError as e:  # Specific error handling
+                if "Spinnaker::Exception" in e.stderr:
+                    print(f"Ignoring known issue on attempt {attempt}: {e.stderr.splitlines()[0]}")
+                    if os.path.isfile(filepath):
+                        print(f'Image {filepath} captured successfully despite the error.')
+                        break  # Break the loop if the image file exists
+                    else:
+                        print('Capture failed, but ignoring as per request.')
+                        break
+            except Exception as e:  # Other exceptions
+                print(f"Attempt {attempt} failed: {str(e)}")
+                if attempt >= self.max_retries:
                     print(f"Capture failed after {attempt} attempts. Moving to next capture or stopping if this is the last one.")
-                    if not os.path.isfile(filepath):
-                        print('No image captured')
-                        print(f"Error: {e.stderr}")
+                else:
+                    print(f"Retrying capture ({attempt}/{self.max_retries}) after error: {str(e)}")
+                gc.collect()
+                print(f"Waiting {retry_sleep_time} seconds before retrying...")
+                time.sleep(retry_sleep_time)  # Wait briefly before retrying
+                retry_sleep_time = min(retry_sleep_time * 2, self.max_retry_sleep_time)  # Exponential backoff, capped at max_retry_sleep_time
 
     def update_laser_shutter_time(self, *args):
         # Update the laser shutter time
