@@ -1,3 +1,5 @@
+INSTRUCTIONS FOR WINDOWS
+
 1. Install visual studio code from microsoft. Click the node symbol, and follow the prompts to install git. 
     install 7zip
 
@@ -29,7 +31,7 @@ Install Visual Studio Code (VSCode) from Microsoft (latest version) and the Spin
    commands (copy and paste one line at a time) to update and install dependencies for your associated Python version:
 
    python3.10 -m ensurepip
-   python3.10 -m pip install pyserial opencv-python psutil numpy==1.26.4
+   python3.10 -m pip install pyenv-win pyserial opencv-python psutil numpy==1.26.4
 -----------------------------------------------------------------------------
 4. To ensure prerequisites such as drivers and Visual Studio redistributables
    are installed on the system, run the Spinnaker SDK installer that corresponds
