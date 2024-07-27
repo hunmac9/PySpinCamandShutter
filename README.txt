@@ -6,14 +6,12 @@ INSTRUCTIONS FOR WINDOWS
 -----------------------------------------------------------------------------
 2. Close and reopen visual studio, click the node button, and click clone repository. Paste https://github.com/hunmac9/PySpinCamandShutter
    into the selected entry box. 
------------------------------------------------------------------------------
-3. Press ctrl+j to open the terminal, type tar -zxvf Python-3.10.14.tgz
 
 -----------------------------------------------------------------------------
 Install Visual Studio Code (VSCode) from Microsoft (latest version) and the Spinnaker SDK (tested with version 3.2.0.62, but should work with the latest version).
     For spinnaker, select the Developer SDK during installation and install the C# and C++ libraries.
 -----------------------------------------------------------------------------
-2. Next, install Python 3.10 from the internet. 64 bit version is preferred. While later versions may work,
+2. Next, install Python 3.10.11 from the internet. 64 bit version is preferred. While later versions may work,
    this is the latest version supported by the PySpin wrapper as of 7/24. 
 -----------------------------------------------------------------------------
 (Optional, if python is being funky) Set the PATH environment variable for the Python installation.
@@ -31,7 +29,7 @@ Install Visual Studio Code (VSCode) from Microsoft (latest version) and the Spin
    commands (copy and paste one line at a time) to update and install dependencies for your associated Python version:
 
    python3.10 -m ensurepip
-   python3.10 -m pip install pyenv-win pyserial opencv-python psutil numpy==1.26.4
+   python3.10 -m pip install pyserial opencv-python psutil numpy==1.26.4
 -----------------------------------------------------------------------------
 4. To ensure prerequisites such as drivers and Visual Studio redistributables
    are installed on the system, run the Spinnaker SDK installer that corresponds
