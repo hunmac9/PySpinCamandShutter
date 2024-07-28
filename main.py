@@ -51,7 +51,7 @@ def run_camera_control(cam_id, text_widget, event):
         if arduino_conn:
             send_command(arduino_conn, 'OPEN')  # Open the laser shutter
 
-        proc = subprocess.Popen(['python3.10', 'liveView.py', str(cam_id)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        proc = subprocess.Popen(['python', 'liveView.py', str(cam_id)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         camera_processes[cam_id] = (proc, arduino_conn, False)  # Store the process, Arduino connection and stopped flag
         text_widget.insert(tk.END, f"Camera {cam_id}: Started successfully, going to open live view.\n")
 
@@ -122,7 +122,7 @@ def launch_interval_capture(cam_id, text_widget):
     stop_camera_control(cam_id, text_widget)
     # Launch interval capture
     text_widget.insert(tk.END, f"Launching interval capture for camera {cam_id}...\n")
-    threading.Thread(target=lambda: subprocess.Popen(['python3.10', 'intervalGUI.py', str(cam_id)])).start()
+    threading.Thread(target=lambda: subprocess.Popen(['python', 'intervalGUI.py', str(cam_id)])).start()
 
 def on_closing():
     for cam_id in list(camera_processes.keys()):  # Use list to avoid RuntimeError: dictionary changed size during iteration

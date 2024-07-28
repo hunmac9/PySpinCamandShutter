@@ -220,7 +220,7 @@ class IntervalCaptureApp:
 
             try:
                 result = subprocess.run(
-                    ['python3.10', 'imageCap.py', str(self.cam_id), filepath],
+                    ['python', 'imageCap.py', str(self.cam_id), filepath],
                     check=True,  # This ensures that an exception is raised for non-zero exit codes.
                     capture_output=True,  # This captures stdout and stderr if needed.
                     text=True
