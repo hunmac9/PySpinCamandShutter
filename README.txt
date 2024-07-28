@@ -1,39 +1,43 @@
-INSTRUCTIONS FOR WINDOWS
-install the arduino IDE and upload the code to each arduino.
------------------------------------------------------------------------------
-Install Visual Studio Code (VSCode) from Microsoft (latest version) and the Spinnaker SDK and the Windows Python Spinnaker SDK for V3.10 (tested with version 3.2.0.62, but should work with the latest version).
-    For spinnaker, select the Developer SDK during installation and install the C# and C++ libraries.2. Close and reopen visual studio, click the node button, and click clone repository. Paste https://github.com/hunmac9/PySpinCamandShutter
-   into the selected entry box. 
------------------------------------------------------------------------------
-2. Next, install Python 3.10.11 from the internet. 64 bit version is preferred. While later versions may work,
-   this is the latest version supported by the PySpin wrapper as of 7/24. 
------------------------------------------------------------------------------
-(Optional, if python is being funky) Set the PATH environment variable for the Python installation.
+# Setup Instructions for Windows
 
-   My Computer > Properties > Advanced System Settings > Environment Variables
+1. **Install the Arduino IDE**
+   - Install the Arduino IDE and upload the code to each Arduino board.
 
-   Add the Python installation location to the PATH variable. For example,
-   if you installed Python at C:\Python310\, you would add the following entry
-   to the PATH variable:
+2. **Install Visual Studio Code (VSCode)**
+   - Download and install the latest version of Visual Studio Code from [Microsoft](https://code.visualstudio.com/).
+   - Install the Spinnaker SDK and the Windows Python Spinnaker SDK for version 3.10 (tested with version 3.2.0.62, but should work with the latest version).
+     - During Spinnaker installation, select the "Developer SDK" option and ensure that both the C# and C++ libraries are installed.
+   - Close and reopen Visual Studio Code.
+   - Click the "Node" button, then click "Clone Repository."
+   - Paste the following URL into the repository entry box: `https://github.com/hunmac9/PySpinCamandShutter`.
 
-   C:\Python310\<rest_of_path>
------------------------------------------------------------------------------
-5. Run the following command to install PySpin to your associated Python version. 
+3. **Install Python**
+   - Download and install Python 3.10.11 (64-bit version is preferred). This is the latest version supported by the PySpin wrapper as of 07/24.
+     - You can download Python from the [official Python website](https://www.python.org/).
 
-   python3.10 -m pip install [path to .whl file, eg, C:/users/documents/spinnaker_python-4.6.x.x-cp310-cp310-win_amd64.whl]
+4. **(Optional) Configure the PATH Environment Variable**
+   - If you encounter issues with Python, you may need to set the PATH environment variable:
+     - Navigate to: `My Computer > Properties > Advanced System Settings > Environment Variables`.
+     - Add the Python installation location to the PATH variable. For example, if Python is installed at `C:\Python310\`, add this entry to the PATH variable:
+       - `C:\Python310\`
 
-   Ensure that the wheel downloaded matches the Python version you are installing to! (eg cp310 for python 3.10)
------------------------------------------------------------------------------
+5. **Install PySpin**
+   - Run the following command to install PySpin for your Python version:
+     ```sh
+     python3.10 -m pip install [path to .whl file, e.g., C:/users/documents/spinnaker_python-4.6.x.x-cp310-cp310-win_amd64.whl]
+     ```
+     - Ensure that the wheel file matches your Python version (e.g., `cp310` for Python 3.10).
 
-3. Configure your Python installation. In VSCode, press control+j. In the command line, run the following
-   commands (copy and paste one line at a time) to update and install dependencies for your associated Python version:
+6. **Configure Python Installation in VSCode**
+   - In VSCode, press `Ctrl + J` to open the integrated terminal.
+   - Run the following commands to update and install necessary Python dependencies:
+     ```sh
+     python -m ensurepip
+     python -m pip install pyserial opencv-python psutil matplotlib numpy==1.26.4
+     ```
 
-   python -m ensurepip
-   python -m pip install pyserial opencv-python psutil matplotlib numpy==1.26.4
------------------------------------------------------------------------------
-4. To ensure prerequisites such as drivers and Visual Studio redistributables
-   are installed on the system, run the Spinnaker SDK installer that corresponds
-   with the PySpin version number. For example, if installing PySpin 3.0.0.0,
-   install Spinnaker 3.0.0.0 beforehand, selecting only the Visual Studio
-   runtimes and drivers. Please install at least version 4.6
------------------------------------------------------------------------------
+7. **Install Spinnaker SDK Prerequisites**
+   - To ensure all prerequisites, such as drivers and Visual Studio redistributables, are installed:
+     - Run the Spinnaker SDK installer that corresponds with the PySpin version you are installing. For example, if you are installing PySpin 3.0.0.0, install Spinnaker 3.0.0.0 beforehand and select only the Visual Studio runtimes and drivers.
+     - Install at least version 4.6.
+
