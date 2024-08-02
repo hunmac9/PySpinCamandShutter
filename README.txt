@@ -1,7 +1,7 @@
 # Setup Instructions for Windows
 
 1. **Install the Arduino IDE**
-   - Install the Arduino IDE and upload the code to each Arduino board.
+   - Install the Arduino IDE and upload the ServoControl.ino code to each Arduino board.
 
 2. **Install Visual Studio Code (VSCode)**
    - Download and install the latest version of Visual Studio Code from [Microsoft](https://code.visualstudio.com/).
@@ -32,7 +32,6 @@
    - In VSCode, press `Ctrl + J` to open the integrated terminal.
    - Run the following commands to update and install necessary Python dependencies:
      ```sh
-     python -m ensurepip
      python -m pip install pyserial opencv-python psutil matplotlib numpy==1.26.4
      ```
 
@@ -40,4 +39,22 @@
    - To ensure all prerequisites, such as drivers and Visual Studio redistributables, are installed:
      - Run the Spinnaker SDK installer that corresponds with the PySpin version you are installing. For example, if you are installing PySpin 3.0.0.0, install Spinnaker 3.0.0.0 beforehand and select only the Visual Studio runtimes and drivers.
      - Install at least version 4.6.
+
+8. **Configure Arduino Communication Ports**
+   - Open Arduino IDE
+      - In the top arduino selection window, beneath each arduino will have the configured COM Ports
+         - If, for example, it shows COM5 and COM6, in the config.ini type COM5 for PORT_ARDUINO_ONE
+         ```
+         PORT_ARDUINO_ONE = COM5
+         PORT_ARDUINO_TWO = COM6
+         ```
+
+9. **Run main.py script**
+   - In VSCode open the PySpinCamandShutter folder, press `Ctrl + J`
+      - In the terminal type 
+         ```
+         python3.10 main.py
+         ```
+      - If there are any errors or missing dependencies returned, follow instructions to install them.
+      - If the program operates the opposite shutter and camera, switch the PORT_ARDUINO_ONE and PORT_ARDUINO_TWO ports.
 
